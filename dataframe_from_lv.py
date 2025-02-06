@@ -65,20 +65,22 @@ fig, ax1 = plt.subplots()
 # Plot 'Timestamp' vs 'CH9 (Hall sensor 1)' on the first y-axis
 ax1.plot(df['Timestamp'], df['CH9(Hall sensor 1)'], label='B (T)', color='b')
 ax1.set_xlabel('Time (min)')
-ax1.set_ylabel('CH9 (Hall sensor 1)', color='b')
+ax1.set_ylabel('B (T)', color='b')
 ax1.tick_params(axis='y', labelcolor='b')
 
 # Create the second y-axis (ax2)
 ax2 = ax1.twinx()
 # Plot 'Timestamp' vs another column (e.g., CH10) on the second y-axis
-ax2.plot(df['Timestamp'], df['CH10(OutAmp1)']/100, label='Voltage (mV)', color='r')
+ax2.plot(df['Timestamp'], abs(df['CH10(OutAmp1)']/100), label='Voltage (mV)', color='r')
 ax2.set_ylabel('Voltage (mV)', color='r')
+ax2.set_ylim(0, 0.03)
 ax2.tick_params(axis='y', labelcolor='r')
 
 # Create the third y-axis (ax3)
 ax3 = ax1.twinx()
 # Offset the third y-axis slightly to avoid overlap with ax2
-ax3.spines['right'].set_position(('outward', 60))
+#ax3.spines['right'].set_position(('outward', 60))
+ax3.set_ylabel('CH11', color='g', labelpad=25)
 # Plot 'Timestamp' vs another column (e.g., CH11) on the third y-axis
 ax3.plot(df['Timestamp'], df['Magna_1_current'], label='I (A)', color='g')
 ax3.set_ylabel('I (A)', color='g')
