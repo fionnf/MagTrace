@@ -1,6 +1,16 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+plot_title = 'Mgn_002'
+
+# Define the window for the x-axis (time in minutes)
+min_time = 0  # Set your desired minimum time in minutes
+max_time = 31  # Set your desired maximum time in minutes
+
+# Specify the file path
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_002/Mgn_002_Anna_1x10m_Theva_FF_050225_processed'
+
+
 
 # Define the function to flatten header columns
 def flatten_col(col):
@@ -39,21 +49,12 @@ def load_and_process_file(file_path):
 
     return df
 
-# Specify the file path
-file_path = '/Users/fionnferreira/polybox/Shared/BarnesGroup/Projects/Magnet_Fabrication/Nitrogen Magnets/Fionn/Mgn_001_Niamh_1x10m_Theva_FF_040225'
-
 # Load and process the file
 df = load_and_process_file(file_path)
 
 # Display the first few rows of the DataFrame
 print(df.head())
 print(df.columns)
-
-# Plotting 'Timestamp' vs 'CH9 (Hall sensor 1)'
-
-# Define the window for the x-axis (time in minutes)
-min_time = 15  # Set your desired minimum time in minutes
-max_time = 40  # Set your desired maximum time in minutes
 
 # Convert 'Timestamp' from milliseconds to minutes
 df['Timestamp'] = df['Timestamp'] / 1000  # Convert to seconds
@@ -70,17 +71,16 @@ ax1.tick_params(axis='y', labelcolor='b')
 
 # Create the second y-axis (ax2)
 ax2 = ax1.twinx()
-# Plot 'Timestamp' vs another column (e.g., CH10) on the second y-axis
 ax2.plot(df['Timestamp'], abs(df['CH10(OutAmp1)']/100), label='Voltage (mV)', color='r')
-ax2.set_ylabel('Voltage (mV)', color='r')
-ax2.set_ylim(0, 0.03)
+ax2.set_ylabel('Voltage (mV)', color='r', labelpad=0)
+ax2.set_ylim(0, 5)
 ax2.tick_params(axis='y', labelcolor='r')
 
 # Create the third y-axis (ax3)
 ax3 = ax1.twinx()
 # Offset the third y-axis slightly to avoid overlap with ax2
 #ax3.spines['right'].set_position(('outward', 60))
-ax3.set_ylabel('CH11', color='g', labelpad=25)
+ax3.set_ylabel('CH11', color='g', labelpad=20)
 # Plot 'Timestamp' vs another column (e.g., CH11) on the third y-axis
 ax3.plot(df['Timestamp'], df['Magna_1_current'], label='I (A)', color='g')
 ax3.set_ylabel('I (A)', color='g')
@@ -90,9 +90,11 @@ ax3.tick_params(axis='y', labelcolor='g')
 ax1.set_xlim(min_time, max_time)
 
 # Add title and legend
-plt.title('Mgn_001')
+plt.title(plot_title)
 
 # Display the plot
 fig.tight_layout()  # To ensure everything fits without overlap
+# Save the plot to a file (e.g., PNG, PDF, SVG)
+plt.savefig(f'Plots/{plot_title}.png', dpi=300)
 plt.show()
 
