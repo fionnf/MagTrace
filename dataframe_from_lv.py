@@ -47,27 +47,50 @@ df = load_and_process_file(file_path)
 
 # Display the first few rows of the DataFrame
 print(df.head())
+print(df.columns)
 
 # Plotting 'Timestamp' vs 'CH9 (Hall sensor 1)'
 
-min_time = 15
-max_time = 40
+# Define the window for the x-axis (time in minutes)
+min_time = 15  # Set your desired minimum time in minutes
+max_time = 40  # Set your desired maximum time in minutes
 
-df['Timestamp'] = df['Timestamp']/1000
-df['Timestamp'] = df['Timestamp']/60
+# Convert 'Timestamp' from milliseconds to minutes
+df['Timestamp'] = df['Timestamp'] / 1000  # Convert to seconds
+df['Timestamp'] = df['Timestamp'] / 60    # Convert to minutes
 
-# Plotting 'Timestamp' vs 'CH9 (Hall sensor 1)'
-plt.plot(df['Timestamp'], df['CH9(Hall sensor 1)'], label='B (T)')
+# Create the plot with the first y-axis (ax1)
+fig, ax1 = plt.subplots()
 
-# Adding labels and title
-plt.xlabel('Time (min)')
-plt.ylabel('CH9 (Hall sensor 1)')
-plt.title('Timestamp vs CH9 (Hall sensor 1)')
+# Plot 'Timestamp' vs 'CH9 (Hall sensor 1)' on the first y-axis
+ax1.plot(df['Timestamp'], df['CH9(Hall sensor 1)'], label='B (T)', color='b')
+ax1.set_xlabel('Time (min)')
+ax1.set_ylabel('CH9 (Hall sensor 1)', color='b')
+ax1.tick_params(axis='y', labelcolor='b')
 
-plt.xlim(min_time, max_time)
+# Create the second y-axis (ax2)
+ax2 = ax1.twinx()
+# Plot 'Timestamp' vs another column (e.g., CH10) on the second y-axis
+ax2.plot(df['Timestamp'], df['CH10(OutAmp1)']/100, label='Voltage (mV)', color='r')
+ax2.set_ylabel('Voltage (mV)', color='r')
+ax2.tick_params(axis='y', labelcolor='r')
+
+# Create the third y-axis (ax3)
+ax3 = ax1.twinx()
+# Offset the third y-axis slightly to avoid overlap with ax2
+ax3.spines['right'].set_position(('outward', 60))
+# Plot 'Timestamp' vs another column (e.g., CH11) on the third y-axis
+ax3.plot(df['Timestamp'], df['Magna_1_current'], label='I (A)', color='g')
+ax3.set_ylabel('I (A)', color='g')
+ax3.tick_params(axis='y', labelcolor='g')
+
+# Set the window for x-axis limits
+ax1.set_xlim(min_time, max_time)
+
+# Add title and legend
+plt.title('Mgn_001')
 
 # Display the plot
-plt.tight_layout()  # To ensure everything fits without overlap
-plt.legend()
+fig.tight_layout()  # To ensure everything fits without overlap
 plt.show()
 
