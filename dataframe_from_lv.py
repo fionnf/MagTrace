@@ -1,16 +1,23 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-plot_title = 'Mgn_002'
+# PLOT PARAMETERS
+
+plot_title = 'High Current Mgn_003'
 
 # Define the window for the x-axis (time in minutes)
-min_time = 0  # Set your desired minimum time in minutes
-max_time = 31  # Set your desired maximum time in minutes
+min_time = 143  # Set your desired minimum time in minutes
+max_time = 160  # Set your desired maximum time in minutes
+v_max = 130  # Set the maximum voltage value for the second y-axis
+i_max = 1200  # Set the maximum current value for the third y-axis
+save = False  # Set to True to save the plot as a file
+v_lab_off = 10  # Set the offset for the voltage label on the second y-axis
+i_lab_off = 25  # Set the offset for the current label on the third y-axis
 
 # Specify the file path
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_002/Mgn_002_Anna_1x10m_Theva_FF_050225_processed'
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_003/Mgn_003_Paulina_1x10m_Theva_FF_060225_processed'
 
-
+# =============================================================
 
 # Define the function to flatten header columns
 def flatten_col(col):
@@ -72,18 +79,19 @@ ax1.tick_params(axis='y', labelcolor='b')
 # Create the second y-axis (ax2)
 ax2 = ax1.twinx()
 ax2.plot(df['Timestamp'], abs(df['CH10(OutAmp1)']/100), label='Voltage (mV)', color='r')
-ax2.set_ylabel('Voltage (mV)', color='r', labelpad=0)
-ax2.set_ylim(0, 5)
+ax2.set_ylabel('Voltage (mV)', color='r', labelpad=v_lab_off)
+ax2.set_ylim(0, v_max)
 ax2.tick_params(axis='y', labelcolor='r')
 
 # Create the third y-axis (ax3)
 ax3 = ax1.twinx()
 # Offset the third y-axis slightly to avoid overlap with ax2
 #ax3.spines['right'].set_position(('outward', 60))
-ax3.set_ylabel('CH11', color='g', labelpad=20)
+ax3.set_ylabel('CH11', color='g', labelpad=i_lab_off)
 # Plot 'Timestamp' vs another column (e.g., CH11) on the third y-axis
 ax3.plot(df['Timestamp'], df['Magna_1_current'], label='I (A)', color='g')
 ax3.set_ylabel('I (A)', color='g')
+ax3.set_ylim(0, i_max)
 ax3.tick_params(axis='y', labelcolor='g')
 
 # Set the window for x-axis limits
@@ -95,6 +103,8 @@ plt.title(plot_title)
 # Display the plot
 fig.tight_layout()  # To ensure everything fits without overlap
 # Save the plot to a file (e.g., PNG, PDF, SVG)
-plt.savefig(f'Plots/{plot_title}.png', dpi=300)
+if save:
+    plt.savefig(f'Plots/{plot_title}.png', dpi=300)
+
 plt.show()
 
