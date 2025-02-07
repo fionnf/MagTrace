@@ -3,19 +3,17 @@ import matplotlib.pyplot as plt
 
 # PLOT PARAMETERS
 
-plot_title = 'High Current Mgn_003'
-
-# Define the window for the x-axis (time in minutes)
-min_time = 143  # Set your desired minimum time in minutes
-max_time = 160  # Set your desired maximum time in minutes
-v_max = 130  # Set the maximum voltage value for the second y-axis
-i_max = 1200  # Set the maximum current value for the third y-axis
-save = False  # Set to True to save the plot as a file
+plot_title = 'Mgn_001'
+min_time = 15  # Set your desired minimum time in minutes
+max_time = 40  # Set your desired maximum time in minutes
+v_max = 22  # Set the maximum voltage value for the second y-axis
+i_max = 400  # Set the maximum current value for the third y-axis
+save = True  # Set to True to save the plot as a file
 v_lab_off = 10  # Set the offset for the voltage label on the second y-axis
 i_lab_off = 25  # Set the offset for the current label on the third y-axis
 
 # Specify the file path
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_003/Mgn_003_Paulina_1x10m_Theva_FF_060225_processed'
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_001/Mgn_001_Niamh_1x10m_Theva_FF_040225_processed'
 
 # =============================================================
 
@@ -104,7 +102,7 @@ plt.title(plot_title)
 fig.tight_layout()  # To ensure everything fits without overlap
 # Save the plot to a file (e.g., PNG, PDF, SVG)
 if save:
-    plt.savefig(f'Plots/{plot_title}.png', dpi=300)
+    plt.savefig(f'Plots/{plot_title}.png', dpi=600)
 
 plt.show()
 
