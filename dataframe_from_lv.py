@@ -3,17 +3,17 @@ import matplotlib.pyplot as plt
 
 # PLOT PARAMETERS
 
-plot_title = 'Mgn_001'
-min_time = 15  # Set your desired minimum time in minutes
-max_time = 40  # Set your desired maximum time in minutes
-v_max = 22  # Set the maximum voltage value for the second y-axis
-i_max = 400  # Set the maximum current value for the third y-axis
+plot_title = 'Mgn_006'
+min_time = 29  # Set your desired minimum time in minutes
+max_time = 41  # Set your desired maximum time in minutes
+v_max = 3  # Set the maximum voltage value for the second y-axis
+i_max = 800  # Set the maximum current value for the third y-axis
 save = True  # Set to True to save the plot as a file
 v_lab_off = 10  # Set the offset for the voltage label on the second y-axis
 i_lab_off = 25  # Set the offset for the current label on the third y-axis
 
 # Specify the file path
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_001/Mgn_001_Niamh_1x10m_Theva_FF_040225_processed'
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_006/Mgn_006_Manuel_1x01m_Theva_FF_100225_processed'
 
 # =============================================================
 
@@ -69,7 +69,7 @@ df['Timestamp'] = df['Timestamp'] / 60    # Convert to minutes
 fig, ax1 = plt.subplots()
 
 # Plot 'Timestamp' vs 'CH9 (Hall sensor 1)' on the first y-axis
-ax1.plot(df['Timestamp'], df['CH9(Hall sensor 1)'], label='B (T)', color='b')
+ax1.plot(df['Timestamp'], abs(df['CH9(Hall sensor 1)']), label='B (T)', color='b')
 ax1.set_xlabel('Time (min)')
 ax1.set_ylabel('B (T)', color='b')
 ax1.tick_params(axis='y', labelcolor='b')
