@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
+from scipy.signal import savgol_filter
 
 # Define the function to flatten header columns
 def flatten_col(col):
@@ -29,10 +30,12 @@ def find_cleaned_csv(folder_path):
             return os.path.join(folder_path, file_name)
     return None
 
-# Define the function to overlay plots from multiple folders with custom labels
-def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_title):
-    plt.figure(figsize=(10, 7))
+# Define the function to apply a Savitzky-Golay filter
+def savitzky_golay_filter(data, window_size, polyorder):
+    return savgol_filter(data, window_size, polyorder)
 
+# Define the function to overlay plots from multiple folders with custom labels
+def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col, plot_title):
     plt.rcParams.update({
         'axes.edgecolor': 'black',
         'axes.linewidth': 1.5,
@@ -58,23 +61,35 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_t
         'legend.fontsize': 18,
     })
 
+    fig, ax1 = plt.subplots(figsize=(10, 7))
+    ax2 = ax1.twinx()
+
     for folder, label in folder_labels.items():
         folder_path = os.path.join(base_path, folder)
         cleaned_csv_path = find_cleaned_csv(folder_path)
 
         if cleaned_csv_path:
             df = load_and_process_file(cleaned_csv_path)
-            plt.scatter(df[current_col], abs(df[hall_sensor_col]), label=label, s=15)
+            voltage_filtered = savitzky_golay_filter(abs(df[voltage_col])/100, window_size=700, polyorder=1)
+            ax1.scatter(df[current_col], abs(df[hall_sensor_col]), label=f'{label} - B (T)', color='tab:blue', s=15)
+            ax2.scatter(df[current_col], voltage_filtered, label=f'{label} - Potential (mV)', color='tab:red', s=5)
         else:
             print(f"No cleaned CSV file found in folder: {folder}")
 
-    plt.xlabel('I (A)')
-    plt.ylabel('B (T)')
-    plt.title(plot_title)
-    plt.legend()
-    plt.minorticks_on()
-    plt.tick_params(top=True, labeltop=False, right=True, labelright=False)
-    plt.tick_params(which='minor', top=True, right=True)
+    ax1.set_xlabel('Current (A)')
+    ax1.set_ylabel('Magnetic Field (T)', color='tab:blue')
+    ax2.set_ylabel('Potential (mV)', color='tab:red')
+    ax1.tick_params(axis='y', labelcolor='tab:blue')
+    ax2.tick_params(axis='y', labelcolor='tab:red')
+    ax1.tick_params(top=True, labeltop=False)  # Place ticks on top
+    ax2.tick_params(top=True, labeltop=False)  # Place ticks on top
+    ax1.minorticks_on()  # Enable minor ticks
+    ax2.minorticks_on()  # Enable minor ticks
+    ax1.tick_params(which='minor', top=True)  # Minor ticks on top
+    ax2.tick_params(which='minor', top=True)  # Minor ticks on top
+    fig.suptitle(plot_title)
+    #fig.legend(loc='upper right')
+
     date_str = datetime.now().strftime('%d%m%Y')
     plt.savefig(f'Plots/{plot_name}_{date_str}.png', dpi=600)
     plt.show()
@@ -86,7 +101,8 @@ folder_labels = {
 }
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
+voltage_col = 'CH10(OutAmp1)'  # Replace with the actual column name for voltage
 plot_title = ''
 plot_name = 'Mgn_JSFF_b'
 
-overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_title)
+overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col, plot_title)
