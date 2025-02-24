@@ -1,19 +1,62 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
-# PLOT PARAMETERS
+# Define the function to flatten header columns
+def flatten_col(col):
+    if isinstance(col, tuple):
+        first = str(col[0]).strip() if pd.notna(col[0]) else ""
+        second = str(col[1]).strip() if pd.notna(col[1]) else ""
+        if second and second != first:
+            return f"{first}({second})"
+        else:
+            return first
+    else:
+        return str(col).strip()
 
-plot_title = 'Mgn_006'
-min_time = 29  # Set your desired minimum time in minutes
-max_time = 41  # Set your desired maximum time in minutes
-v_max = 3  # Set the maximum voltage value for the second y-axis
-i_max = 800  # Set the maximum current value for the third y-axis
-save = True  # Set to True to save the plot as a file
-v_lab_off = 10  # Set the offset for the voltage label on the second y-axis
-i_lab_off = 25  # Set the offset for the current label on the third y-axis
+# Define the function to load and process the file
+def load_and_process_file(file_path):
+    skip_rows = 1
+    df = pd.read_csv(file_path, delimiter=';', skiprows=skip_rows, header=[0, 1])
+    df = df.dropna(axis=1, how='all')
+    df.columns = [flatten_col(col) for col in df.columns]
+    df = df.apply(pd.to_numeric, errors='coerce')
+    df['Timestamp'] = df['Timestamp'] / 1000  # Convert to seconds
+    df['Timestamp'] = df['Timestamp'] / 60    # Convert to minutes
+    return df
 
-# Specify the file path
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_006/Mgn_006_Manuel_1x01m_Theva_FF_100225_processed'
+# Define the function to filter the DataFrame, plot, and save to CSV
+def filter_and_plot(file_path, column, min_time, max_time):
+    df = load_and_process_file(file_path)
+    df_filtered = df[(df['Timestamp'] >= min_time) & (df['Timestamp'] <= max_time)].copy()
+    df_filtered['Timestamp'] -= df_filtered['Timestamp'].min()  # Set start time to zero
+
+    # Print the filtered DataFrame (truncated)
+    with pd.option_context('display.max_rows', 10, 'display.max_columns', None):
+        print(df_filtered)
+
+    # Save the filtered DataFrame to a new CSV file
+    base, ext = os.path.splitext(file_path)
+    new_file_path = f"{base}_clean{ext}"
+    df_filtered.to_csv(new_file_path, index=False)
+    print(f"Filtered data saved to: {new_file_path}")
+
+    # Plot the filtered data
+    plt.figure(figsize=(10, 6))
+    plt.plot(df_filtered['Timestamp'], abs(df_filtered[column]), label=column)
+    plt.xlabel('Time (min)')
+    plt.ylabel('Value')
+    plt.title('Filtered Data Plot')
+    plt.legend()
+    plt.show()
+
+# Example usage
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/FFJS_Shanghai_Leonardo/Mgn_JSFF_HeShanghai_Leonardo_022025_processed_clean'
+column = 'CH9(Hall sensor 1)'
+min_time = 0
+max_time = 400
+
+filter_and_plot(file_path, column, min_time, max_time)
 
 # =============================================================
 

@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from scipy.signal import savgol_filter
 
 # Define the function to flatten header columns
 def flatten_col(col):
@@ -25,11 +26,19 @@ def load_and_process_file(file_path):
     df['Timestamp'] = df['Timestamp'] / 60    # Convert to minutes
     return df
 
+# Define the function to apply a Savitzky-Golay filter to remove spikes
+def remove_spikes(df, column, window_size=51, polyorder=3):
+    df[column] = savgol_filter(df[column], window_size, polyorder)
+    return df
+
 # Define the function to filter the DataFrame, plot, and save to CSV
-def filter_and_plot(file_path, column, min_time, max_time):
+def filter_and_plot(file_path, column, min_time, max_time, window_size=51, polyorder=3):
     df = load_and_process_file(file_path)
     df_filtered = df[(df['Timestamp'] >= min_time) & (df['Timestamp'] <= max_time)].copy()
     df_filtered['Timestamp'] -= df_filtered['Timestamp'].min()  # Set start time to zero
+
+    # Remove spikes from the filtered DataFrame
+    df_filtered = remove_spikes(df_filtered, column, window_size, polyorder)
 
     # Print the filtered DataFrame (truncated)
     with pd.option_context('display.max_rows', 10, 'display.max_columns', None):
@@ -51,9 +60,9 @@ def filter_and_plot(file_path, column, min_time, max_time):
     plt.show()
 
 # Example usage
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_008/Mgn_008_Simone_1x01m_Theva_FF_120225_processed'
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_JSFF_b/Mgn_JSFF_HeShanghai_Leonardo_022125_b_processed'
 column = 'CH9(Hall sensor 1)'
-min_time = 35
-max_time = 63
+min_time = 00
+max_time = 375
 
 filter_and_plot(file_path, column, min_time, max_time)
