@@ -82,11 +82,13 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_t
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_JSFF_b': 'Shanghai Leonardo',
+    'Mgn_JSFF_b': '(i + ii)',
+    'Leonardo_1': '(i)',
+    'Leonardo_2': '(ii)',
 }
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
 plot_title = ''
-plot_name = 'Mgn_JSFF_b'
+plot_name = 'i & ii & i + ii'
 
 overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_title)

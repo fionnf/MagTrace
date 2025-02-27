@@ -60,9 +60,9 @@ def filter_and_plot(file_path, column, min_time, max_time, window_size=51, polyo
     plt.show()
 
 # Example usage
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_JSFF_b/Mgn_JSFF_HeShanghai_Leonardo_022125_b_processed'
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Leonardo_2/Mgn_JSFF_HeShanghai_Leonardo_2_022425_processed'
 column = 'CH9(Hall sensor 1)'
-min_time = 00
-max_time = 375
+min_time = 0
+max_time = 120
 
 filter_and_plot(file_path, column, min_time, max_time)
