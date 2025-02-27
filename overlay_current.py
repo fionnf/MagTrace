@@ -30,7 +30,7 @@ def find_cleaned_csv(folder_path):
     return None
 
 # Define the function to overlay plots from multiple folders with custom labels
-def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_title):
+def overlay_plots(base_path, folder_labels, folder_colors, hall_sensor_col, current_col, plot_title):
     plt.figure(figsize=(10, 7))
 
     plt.rcParams.update({
@@ -64,7 +64,7 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_t
 
         if cleaned_csv_path:
             df = load_and_process_file(cleaned_csv_path)
-            plt.scatter(df[current_col], abs(df[hall_sensor_col]), label=label, s=15)
+            plt.scatter(df[current_col], abs(df[hall_sensor_col]), label=label, s=15, color=folder_colors[folder])
         else:
             print(f"No cleaned CSV file found in folder: {folder}")
 
@@ -79,16 +79,24 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_t
     plt.savefig(f'Plots/{plot_name}_{date_str}.png', dpi=600)
     plt.show()
 
+
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_JSFF_b': '(i + ii)',
+    #'Mgn_JSFF_b': '(i + ii)',
     'Leonardo_1': '(i)',
     'Leonardo_2': '(ii)',
 }
+
+folder_colors = {
+    #'Mgn_JSFF_b': 'tab:blue',
+    'Leonardo_1': 'tab:green',
+    'Leonardo_2': 'tab:orange',
+}
+
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
 plot_title = ''
-plot_name = 'i & ii & i + ii'
+plot_name = '(i) & (ii)'
 
-overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, plot_title)
+overlay_plots(base_path, folder_labels, folder_colors, hall_sensor_col, current_col, plot_title)
