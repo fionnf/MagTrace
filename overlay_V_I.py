@@ -71,8 +71,8 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
         if cleaned_csv_path:
             df = load_and_process_file(cleaned_csv_path)
             voltage_filtered = savitzky_golay_filter(abs(df[voltage_col])/100, window_size=700, polyorder=1)
-            ax1.scatter(df[current_col], abs(df[hall_sensor_col]), label=f'{label} - B (T)', color='tab:blue', s=15)
-            ax2.scatter(df[current_col], voltage_filtered, label=f'{label} - Potential (mV)', color='tab:red', s=5)
+            ax1.scatter(df[current_col], abs(df[hall_sensor_col]), label=f'{label}', color='tab:blue', s=15)
+            ax2.scatter(df[current_col], voltage_filtered, label=f'', color='tab:red', s=5)
         else:
             print(f"No cleaned CSV file found in folder: {folder}")
 
@@ -85,19 +85,20 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
     ax2.tick_params(top=True, labeltop=False)  # Place ticks on top
     ax1.minorticks_on()  # Enable minor ticks
     ax2.minorticks_on()  # Enable minor ticks
+    ax1.legend()
     ax1.tick_params(which='minor', top=True)  # Minor ticks on top
     ax2.tick_params(which='minor', top=True)  # Minor ticks on top
     fig.suptitle(plot_title)
-    #fig.legend(loc='upper right')
 
     date_str = datetime.now().strftime('%d%m%Y')
     plt.savefig(f'Plots/{plot_name}_{date_str}.png', dpi=600)
+
     plt.show()
 
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_JSFF_b': 'Shanghai Leonardo',
+    'Mgn_JSFF_b': '(i + ii)',
 }
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
