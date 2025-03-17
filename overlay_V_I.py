@@ -85,7 +85,7 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
     ax2.tick_params(top=True, labeltop=False)  # Place ticks on top
     ax1.minorticks_on()  # Enable minor ticks
     ax2.minorticks_on()  # Enable minor ticks
-    ax1.legend()
+    #ax1.legend()
     ax1.tick_params(which='minor', top=True)  # Minor ticks on top
     ax2.tick_params(which='minor', top=True)  # Minor ticks on top
     fig.suptitle(plot_title)
@@ -98,12 +98,12 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_JSFF_b': '(i + ii)',
+    'Mgn_013': '(iii)',
 }
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
 voltage_col = 'CH10(OutAmp1)'  # Replace with the actual column name for voltage
 plot_title = ''
-plot_name = 'Mgn_JSFF_b'
+plot_name = 'Mgn_013_Rose'
 
 overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col, plot_title)

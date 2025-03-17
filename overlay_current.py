@@ -83,24 +83,24 @@ def overlay_plots(base_path, folder_labels, folder_colors, hall_sensor_col, curr
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    #'Mgn_013': '5m',
-    'Mgn_JSFF_b': '2 x 200m',
+    'Mgn_013': '5m',
+    #'Mgn_JSFF_b': '2 x 200m',
     #'Leonardo_1': '1 x 200m',
     #'Leonardo_2': '1 x 200m',
-    'Mgn_015d': '2 x 45m (piggy 3 r)',
-    'Piggy_3': '2 x 45m (piggy 3 u)',
+    #'Mgn_015d': '2 x 45m (piggy 3 r)',
+    #'Piggy_3': '2 x 45m (piggy 3 u)',
     #'Mgn_015c': '2 x 45m (piggy 3)',
     #'Piggy_2': '1 x 45m (piggy 2)',
     #'Piggy_1': '1 x 45m (piggy 1)',
 }
 
 folder_colors = {
-    #'Mgn_013': 'tab:green',
-    'Mgn_JSFF_b': 'tab:orange',
+    'Mgn_013': 'tab:green',
+    #'Mgn_JSFF_b': 'tab:orange',
     #'Leonardo_1': 'tab:red',
     #'Leonardo_2': 'tab:purple',
-    'Mgn_015d': 'tab:brown',
-    'Piggy_3': 'tab:blue',
+    #'Mgn_015d': 'tab:brown',
+    #'Piggy_3': 'tab:blue',
     #'Mgn_015c': 'tab:pink',
     #'Piggy_2': 'tab:cyan',
     #'Piggy_1': 'tab:olive',
