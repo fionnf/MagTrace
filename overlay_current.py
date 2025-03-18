@@ -83,10 +83,10 @@ def overlay_plots(base_path, folder_labels, folder_colors, hall_sensor_col, curr
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_013': '5m',
-    #'Mgn_JSFF_b': '2 x 200m',
-    #'Leonardo_1': '1 x 200m',
-    #'Leonardo_2': '1 x 200m',
+    #'Mgn_013': '1 x 5m (iii)',
+    'Mgn_JSFF_b': '2 x 200m (i+ii)',
+    'Mgn_014a': '1 x 200m (i)',
+    'Mgn_014b': '1 x 200m (ii)',
     #'Mgn_015d': '2 x 45m (piggy 3 r)',
     #'Piggy_3': '2 x 45m (piggy 3 u)',
     #'Mgn_015c': '2 x 45m (piggy 3)',
@@ -95,10 +95,10 @@ folder_labels = {
 }
 
 folder_colors = {
-    'Mgn_013': 'tab:green',
-    #'Mgn_JSFF_b': 'tab:orange',
-    #'Leonardo_1': 'tab:red',
-    #'Leonardo_2': 'tab:purple',
+    #'Mgn_013': 'tab:green',
+    'Mgn_JSFF_b': 'tab:purple',
+    'Mgn_014a': 'tab:red',
+    'Mgn_014b': 'tab:blue',
     #'Mgn_015d': 'tab:brown',
     #'Piggy_3': 'tab:blue',
     #'Mgn_015c': 'tab:pink',
@@ -109,6 +109,6 @@ folder_colors = {
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
 plot_title = ''
-plot_name = 'Shanghai double coils'
+plot_name = 'Leonardo'
 
 overlay_plots(base_path, folder_labels, folder_colors, hall_sensor_col, current_col, plot_title)

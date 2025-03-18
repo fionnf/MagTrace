@@ -35,7 +35,7 @@ def savitzky_golay_filter(data, window_size, polyorder):
     return savgol_filter(data, window_size, polyorder)
 
 # Define the function to overlay plots from multiple folders with custom labels
-def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col, plot_title):
+def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col_1, voltage_col_2, voltage_divide_1, voltage_divide_2, plot_title):
     plt.rcParams.update({
         'axes.edgecolor': 'black',
         'axes.linewidth': 1.5,
@@ -70,22 +70,31 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
 
         if cleaned_csv_path:
             df = load_and_process_file(cleaned_csv_path)
-            voltage_filtered = savitzky_golay_filter(abs(df[voltage_col])/100, window_size=700, polyorder=1)
+            voltage_column = voltage_col_1 if folder == list(folder_labels.keys())[0] else voltage_col_2
+            voltage_divisor = voltage_divide_1 if folder == list(folder_labels.keys())[0] else voltage_divide_2
+            voltage_filtered = savgol_filter(abs(df[voltage_column]) / voltage_divisor, window_length=700, polyorder=2)
             ax1.scatter(df[current_col], abs(df[hall_sensor_col]), label=f'{label}', color='tab:blue', s=15)
             ax2.scatter(df[current_col], voltage_filtered, label=f'', color='tab:red', s=5)
         else:
             print(f"No cleaned CSV file found in folder: {folder}")
 
+    for i, (folder, label) in enumerate(folder_labels.items()):
+        magnetic_color = colors[f'set{i + 1}']['field']
+        voltage_color = colors[f'set{i + 1}']['voltage']
+
+        ax1.scatter(df[current_col], abs(df[hall_sensor_col]), label=f'{label} Magnetic', color=magnetic_color, s=15)
+        ax2.scatter(df[current_col], voltage_filtered, label=f'{label} Voltage', color=voltage_color, s=5, marker='x')
+
     ax1.set_xlabel('Current (A)')
-    ax1.set_ylabel('Magnetic Field (T)', color='tab:blue')
-    ax2.set_ylabel('Potential (mV)', color='tab:red')
-    ax1.tick_params(axis='y', labelcolor='tab:blue')
-    ax2.tick_params(axis='y', labelcolor='tab:red')
+    ax1.set_ylabel('Magnetic Field (T)')
+    ax2.set_ylabel('Potential (mV)')
+    ax1.tick_params(axis='y')
+    ax2.tick_params(axis='y')
     ax1.tick_params(top=True, labeltop=False)  # Place ticks on top
     ax2.tick_params(top=True, labeltop=False)  # Place ticks on top
     ax1.minorticks_on()  # Enable minor ticks
     ax2.minorticks_on()  # Enable minor ticks
-    #ax1.legend()
+    ax1.legend()
     ax1.tick_params(which='minor', top=True)  # Minor ticks on top
     ax2.tick_params(which='minor', top=True)  # Minor ticks on top
     fig.suptitle(plot_title)
@@ -98,12 +107,24 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_013': '(iii)',
+    'Mgn_014b': '(ii)',
+    'Mgn_014a': '(i)',
 }
 hall_sensor_col = 'CH9(Hall sensor 1)'
 current_col = 'Magna_1_current'
-voltage_col = 'CH10(OutAmp1)'  # Replace with the actual column name for voltage
+voltage_col_1 = 'CH15(InAmp1)'
+voltage_col_2 = 'CH12(OutAmp3)'
+voltage_divide_1 = 1
+voltage_divide_2 = 100
 plot_title = ''
-plot_name = 'Mgn_013_Rose'
+plot_name = 'Leonardo BV'
 
-overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col, plot_title)
+colors = {
+    'set1': {'field': 'tab:blue', 'voltage': 'tab:'},
+    'set2': {'field': 'tab:red', 'voltage': 'tab:pink'},
+    'set3': {'field': 'tab:green', 'voltage': 'tab:olive'},
+    'set4': {'field': 'tab:purple', 'voltage': 'tab:pink'},
+    'set5': {'field': 'tab:orange', 'voltage': 'tab:brown'}
+}
+
+overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col_1, voltage_col_2, voltage_divide_1, voltage_divide_2, plot_title)

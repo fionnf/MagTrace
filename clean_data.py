@@ -78,12 +78,12 @@ def filter_and_plot(file_path, column, min_time, max_time, window_size=51, polyo
     plt.show()
 
 # Example usage
-file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_013/Mgn_013_Rose_1x5m_Shanghai_FF_190225_processed'
+file_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets/Mgn_014b/Mgn_014b_Ardo_1x200m_Shanghai_FF_130325_processed'
 column = 'CH9(Hall sensor 1)'
 min_time = 0
-max_time = 23
-remove_windows = [(60,61.5)]  # Example time windows to remove [(x, y), (z, w)]
-divide_voltages = { #include voltage channels and time windows to divide by 100
+max_time = 140
+remove_windows = []
+divide_voltages = {
     'CH10(OutAmp1)': [],
     'CH11(OutAmp2)': []
 }
