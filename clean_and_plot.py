@@ -675,11 +675,14 @@ class FileCombinerUI(QMainWindow):
 
         self.file_list = QListWidget()
         self.file_list.setSelectionMode(QListWidget.MultiSelection)
-        # Allow reordering of files and visualize combination order
-        self.file_list.setDragDropMode(QListWidget.InternalMove)
-        self.file_list.setDefaultDropAction(Qt.MoveAction)
+        # Remove drag-and-drop reordering; use selection order instead
+        # self.file_list.setDragDropMode(QListWidget.InternalMove)
+        # self.file_list.setDefaultDropAction(Qt.MoveAction)
         layout.addWidget(QLabel("Select Cleaned Files to Combine:"))
         layout.addWidget(self.file_list)
+
+        # Remove drag-and-drop reordering signal
+        # self.file_list.model().rowsMoved.connect(lambda *args: self.refresh_numbered_file_list())
 
         combine_button = QPushButton("Combine Selected Files")
         combine_button.clicked.connect(self.combine_files)
@@ -689,19 +692,26 @@ class FileCombinerUI(QMainWindow):
 
     def update_file_list(self):
         self.file_list.clear()
-        for i, file in enumerate(self.shared_data_manager.get_cleaned_files()):
-            self.file_list.addItem(f"{i+1}: {file}")
+        for file in self.shared_data_manager.get_cleaned_files():
+            self.file_list.addItem(file)
+        self.refresh_numbered_file_list()
 
     def combine_files(self):
-        selected_items = self.file_list.selectedItems()
-        if not selected_items:
+        # Always refresh numbered file list to reflect selection order
+        self.refresh_numbered_file_list()
+        # Get selected paths in the order user clicked them
+        selected_paths = []
+        for i in range(self.file_list.count()):
+            item = self.file_list.item(i)
+            if item.isSelected():
+                selected_paths.append(item.text().split(": ", 1)[-1])
+
+        if not selected_paths:
             return
 
         dfs = []
         offset = 0
-        for item in selected_items:
-            # Extract actual file path from list item
-            file_path = item.text().split(": ", 1)[1]
+        for file_path in selected_paths:
             df = pd.read_csv(file_path)
             if 'Timestamp' in df.columns:
                 df['Timestamp'] = df['Timestamp'] + offset
@@ -717,6 +727,14 @@ class FileCombinerUI(QMainWindow):
                 self.shared_data_manager.add_cleaned_file(save_path)
             # Update each list item text after combining to refresh ordering
             self.update_file_list()
+            self.refresh_numbered_file_list()
+
+    def refresh_numbered_file_list(self):
+        # Number only selected items in the order they were selected
+        selected = [self.file_list.item(i) for i in range(self.file_list.count()) if self.file_list.item(i).isSelected()]
+        for i, item in enumerate(selected):
+            text = item.text().split(": ", 1)[-1]
+            item.setText(f"{i + 1}: {text}")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
