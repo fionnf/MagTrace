@@ -489,11 +489,23 @@ class PlotterUI(QMainWindow):
         self.show_legend_checkbox.setChecked(True)
         layout.addWidget(self.show_legend_checkbox)
 
+        # Add custom legend entry inputs below the legend toggle checkbox
+        self.y1_legend_input = QLineEdit()
+        self.y1_legend_input.setPlaceholderText("Y1 Legend")
+
+        self.y2_legend_input = QLineEdit()
+        self.y2_legend_input.setPlaceholderText("Y2 Legend")
+        self.y2_legend_input.setEnabled(False)
+
+        layout.addWidget(self.y1_legend_input)
+        layout.addWidget(self.y2_legend_input)
+
     def toggle_second_y_axis(self, state):
         enabled = state == Qt.Checked
         self.y2_axis_combo.setEnabled(enabled)
         self.y2_label_input.setEnabled(enabled)
         self.y2_abs_checkbox.setEnabled(enabled)
+        self.y2_legend_input.setEnabled(enabled)
 
     def setup_plot_controls(self, layout):
         plot_button = QPushButton("Plot")
@@ -552,7 +564,13 @@ class PlotterUI(QMainWindow):
                 y1_data = self.df[y1_col][mask]
                 if self.y1_abs_checkbox.isChecked():
                     y1_data = y1_data.abs()
-                ax1.plot(x_data, y1_data, label=y1_col, color='tab:blue')
+                # Use custom legend entry for Y1
+                ax1.plot(
+                    x_data,
+                    y1_data,
+                    label=self.y1_legend_input.text() or y1_col,
+                    color='tab:blue'
+                )
                 ax1.set_ylabel(self.y1_label_input.text() or y1_col, color='tab:blue')
                 ax1.tick_params(axis='y', labelcolor='tab:blue')
 
@@ -560,7 +578,13 @@ class PlotterUI(QMainWindow):
                 y2_data = self.df[y2_col][mask]
                 if self.y2_abs_checkbox.isChecked():
                     y2_data = y2_data.abs()
-                ax2.plot(x_data, y2_data, label=y2_col, color='tab:red')
+                # Use custom legend entry for Y2
+                ax2.plot(
+                    x_data,
+                    y2_data,
+                    label=self.y2_legend_input.text() or y2_col,
+                    color='tab:red'
+                )
                 ax2.set_ylabel(self.y2_label_input.text() or y2_col, color='tab:red')
                 ax2.tick_params(axis='y', labelcolor='tab:red')
 
