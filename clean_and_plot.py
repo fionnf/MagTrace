@@ -484,6 +484,10 @@ class PlotterUI(QMainWindow):
         layout.addWidget(QLabel("X range:"))
         layout.addWidget(self.x_min_input)
         layout.addWidget(self.x_max_input)
+        # Add legend toggle checkbox
+        self.show_legend_checkbox = QCheckBox("Show Legend")
+        self.show_legend_checkbox.setChecked(True)
+        layout.addWidget(self.show_legend_checkbox)
 
     def toggle_second_y_axis(self, state):
         enabled = state == Qt.Checked
@@ -564,13 +568,14 @@ class PlotterUI(QMainWindow):
             ax1.set_xlabel(self.x_label_input.text() or x_col)
             ax1.grid(True)
 
-            # Add combined legend at bottom right
-            lines, labels = ax1.get_legend_handles_labels()
-            if ax2:
-                l2, lb2 = ax2.get_legend_handles_labels()
-                lines += l2
-                labels += lb2
-            ax1.legend(lines, labels, loc='lower right')
+            # Add combined legend at bottom right if enabled
+            if self.show_legend_checkbox.isChecked():
+                lines, labels = ax1.get_legend_handles_labels()
+                if ax2:
+                    l2, lb2 = ax2.get_legend_handles_labels()
+                    lines += l2
+                    labels += lb2
+                ax1.legend(lines, labels, loc='lower right')
 
             self.canvas.draw()
 
@@ -594,24 +599,29 @@ class MainWindow(QMainWindow):
         
         cleaner_button = QPushButton("Data Cleaner")
         plotter_button = QPushButton("IV Plotter")
-        
+        combiner_button = QPushButton("Combine Files")
+
         button_layout.addWidget(cleaner_button)
         button_layout.addWidget(plotter_button)
+        button_layout.addWidget(combiner_button)
         layout.addWidget(button_widget)
 
         # Stacked widget for interfaces
         self.stacked_widget = QStackedWidget()
         self.cleaner = DataCleanerUI(self.shared_data_manager)
         self.plotter = PlotterUI(self.shared_data_manager)
-        
+        self.combiner = FileCombinerUI(self.shared_data_manager)
+
         self.stacked_widget.addWidget(self.cleaner)
         self.stacked_widget.addWidget(self.plotter)
-        
+        self.stacked_widget.addWidget(self.combiner)
+
         layout.addWidget(self.stacked_widget)
 
         # Connect buttons
         cleaner_button.clicked.connect(self.switch_to_cleaner)
         plotter_button.clicked.connect(self.switch_to_plotter)
+        combiner_button.clicked.connect(self.switch_to_combiner)
 
     def switch_to_cleaner(self):
         self.stacked_widget.setCurrentIndex(0)
@@ -619,6 +629,70 @@ class MainWindow(QMainWindow):
     def switch_to_plotter(self):
         self.stacked_widget.setCurrentIndex(1)
         self.plotter.update_file_list()
+
+    def switch_to_combiner(self):
+        self.stacked_widget.setCurrentIndex(2)
+        self.combiner.update_file_list()
+
+
+# --- File Combiner UI ---
+class FileCombinerUI(QMainWindow):
+    def __init__(self, shared_data_manager):
+        super().__init__()
+        self.shared_data_manager = shared_data_manager
+        self.setWindowTitle("File Combiner")
+        self.setGeometry(100, 100, 1400, 800)
+        self.setup_ui()
+
+    def setup_ui(self):
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        layout = QVBoxLayout(main_widget)
+
+        self.file_list = QListWidget()
+        self.file_list.setSelectionMode(QListWidget.MultiSelection)
+        # Allow reordering of files and visualize combination order
+        self.file_list.setDragDropMode(QListWidget.InternalMove)
+        self.file_list.setDefaultDropAction(Qt.MoveAction)
+        layout.addWidget(QLabel("Select Cleaned Files to Combine:"))
+        layout.addWidget(self.file_list)
+
+        combine_button = QPushButton("Combine Selected Files")
+        combine_button.clicked.connect(self.combine_files)
+        layout.addWidget(combine_button)
+
+        self.update_file_list()
+
+    def update_file_list(self):
+        self.file_list.clear()
+        for i, file in enumerate(self.shared_data_manager.get_cleaned_files()):
+            self.file_list.addItem(f"{i+1}: {file}")
+
+    def combine_files(self):
+        selected_items = self.file_list.selectedItems()
+        if not selected_items:
+            return
+
+        dfs = []
+        offset = 0
+        for item in selected_items:
+            # Extract actual file path from list item
+            file_path = item.text().split(": ", 1)[1]
+            df = pd.read_csv(file_path)
+            if 'Timestamp' in df.columns:
+                df['Timestamp'] = df['Timestamp'] + offset
+                offset = df['Timestamp'].iloc[-1] + 0.01  # ensure next starts slightly after
+            dfs.append(df)
+
+        if dfs:
+            combined_df = pd.concat(dfs, ignore_index=True)
+            save_path, _ = QFileDialog.getSaveFileName(
+                self, "Save Combined Data", "", "CSV Files (*.csv);;All Files (*)")
+            if save_path:
+                combined_df.to_csv(save_path, index=False)
+                self.shared_data_manager.add_cleaned_file(save_path)
+            # Update each list item text after combining to refresh ordering
+            self.update_file_list()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
