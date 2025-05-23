@@ -563,6 +563,10 @@ class PlotterUI(QMainWindow):
         layout.addWidget(self.y1_legend_input)
         layout.addWidget(self.y2_legend_input)
 
+        # Add QLabel to display R at 100A under the options panel
+        self.r100a_label = QLabel("")
+        layout.addWidget(self.r100a_label)
+
     def toggle_resistance_controls(self, state):
         enabled = state == Qt.Checked
         self.resistance_widget.setVisible(enabled)
@@ -587,12 +591,9 @@ class PlotterUI(QMainWindow):
         layout.addWidget(plot_button)
 
     def setup_plot_area(self, layout):
-        self.figure = Figure(figsize=(8, 6))
+        self.figure = Figure(figsize=(6, 4), dpi=300)  # Standard size for academic plots
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
-        # Add QLabel to display R at 100A above the plot area
-        self.r100a_label = QLabel("")
-        layout.addWidget(self.r100a_label)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
 
@@ -735,6 +736,8 @@ class PlotterUI(QMainWindow):
                     labels += lb2
                 ax1.legend(lines, labels, loc='lower right')
 
+            # Enforce tight layout for clean export
+            self.figure.tight_layout()
             self.canvas.draw()
 
     def open_external_file(self):
