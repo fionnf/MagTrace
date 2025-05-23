@@ -90,6 +90,8 @@ class DataCleanerUI(QMainWindow):
             # Add column label
             scaling_layout.addWidget(QLabel(col_name))
 
+            # Add "Scale:" label before scaling combo box
+            scaling_layout.addWidget(QLabel("Scale:"))
             # Add scaling combo box
             scale_combo = QComboBox()
             scale_combo.addItems(['1x', '÷10', '÷100', '÷1000'])
@@ -98,6 +100,8 @@ class DataCleanerUI(QMainWindow):
                 lambda text, col=col_name: self.update_column_scale(col, text))
             scaling_layout.addWidget(scale_combo)
 
+            # Add "Offset:" label before offset input
+            scaling_layout.addWidget(QLabel("Offset:"))
             # Add offset input
             offset_input = QLineEdit()
             offset_input.setPlaceholderText("Offset")
@@ -148,7 +152,7 @@ class DataCleanerUI(QMainWindow):
         # Scaling controls
         self.scaling_widget = QWidget()
         self.scaling_layout = QVBoxLayout(self.scaling_widget)
-        left_layout.addWidget(QLabel("Column Scaling:"))
+        left_layout.addWidget(QLabel("Column Scaling (Multiply/Divide) and Offset:"))
         left_layout.addWidget(self.scaling_widget)
 
         # Time range controls
@@ -325,7 +329,7 @@ class DataCleanerUI(QMainWindow):
                     '÷1000': 0.001
                 }.get(scale_text, 1.0)
                 offset = self.column_offsets.get(col, 0.0)
-                y_data = df_filtered[col] * scale_factor + offset
+                y_data = (df_filtered[col] + offset) * scale_factor  # offset first, then scaling
                 if 'Timestamp' in df_filtered.columns:
                     ax.plot(df_filtered['Timestamp'], y_data, label=f"{col} ({scale_text})")
                 else:
@@ -338,6 +342,10 @@ class DataCleanerUI(QMainWindow):
         ax.set_ylabel('Value')
         ax.grid(True)
         ax.legend()
+        # Increase font sizes
+        ax.tick_params(axis='both', labelsize=12)
+        ax.xaxis.label.set_size(14)
+        ax.yaxis.label.set_size(14)
         self.canvas.draw()
 
     def update_time_from_input(self):
@@ -394,12 +402,9 @@ class DataCleanerUI(QMainWindow):
                         '÷100': 0.01,
                         '÷1000': 0.001
                     }.get(scale, 1.0)
-                    if scale != '1x':
-                        # Apply scaling to the data
-                        df_filtered[column] = df_filtered[column] * scale_factor
-                    # Apply offset
                     offset = self.column_offsets.get(column, 0.0)
-                    df_filtered[column] += offset
+                    # Apply offset first, then scaling
+                    df_filtered[column] = (df_filtered[column] + offset) * scale_factor
                     # Update column name to reflect scaling
                     if scale != '1x':
                         new_column = f"{column}_{scale[1:]}"  # Remove the '÷' symbol
@@ -456,6 +461,10 @@ class PlotterUI(QMainWindow):
         self.load_button = QPushButton("Load Cleaned File")
         self.load_button.clicked.connect(self.load_file)
         layout.addWidget(self.load_button)
+        # Add button to open arbitrary CSV file
+        self.open_file_button = QPushButton("Open CSV (Any File)")
+        self.open_file_button.clicked.connect(self.open_external_file)
+        layout.addWidget(self.open_file_button)
         self.file_list = QListWidget()
         layout.addWidget(QLabel("Available Files:"))
         layout.addWidget(self.file_list)
@@ -478,6 +487,31 @@ class PlotterUI(QMainWindow):
 
         self.enable_y2_checkbox = QCheckBox("Enable Second Y-axis")
         self.enable_y2_checkbox.stateChanged.connect(self.toggle_second_y_axis)
+
+        # --- Resistance plotting controls ---
+        self.enable_resistance_checkbox = QCheckBox("Calculate and Plot Resistance")
+        self.enable_resistance_checkbox.stateChanged.connect(self.toggle_resistance_controls)
+        layout.addWidget(self.enable_resistance_checkbox)
+
+        self.resistance_widget = QWidget()
+        self.resistance_layout = QVBoxLayout(self.resistance_widget)
+
+        self.voltage_combo = QComboBox()
+        self.current_combo = QComboBox()
+        self.voltage_scale_combo = QComboBox()
+        # Update voltage scale combo box items for resistance calculation
+        self.voltage_scale_combo.clear()
+        self.voltage_scale_combo.addItems(['mV', 'mV×100', 'mV×1000'])
+
+        self.resistance_layout.addWidget(QLabel("Voltage Column:"))
+        self.resistance_layout.addWidget(self.voltage_combo)
+        self.resistance_layout.addWidget(QLabel("Current Column:"))
+        self.resistance_layout.addWidget(self.current_combo)
+        self.resistance_layout.addWidget(QLabel("Voltage Scale:"))
+        self.resistance_layout.addWidget(self.voltage_scale_combo)
+
+        layout.addWidget(self.resistance_widget)
+        self.resistance_widget.setVisible(False)
 
         self.x_min_input = QLineEdit()
         self.x_max_input = QLineEdit()
@@ -522,6 +556,15 @@ class PlotterUI(QMainWindow):
         layout.addWidget(self.y1_legend_input)
         layout.addWidget(self.y2_legend_input)
 
+    def toggle_resistance_controls(self, state):
+        enabled = state == Qt.Checked
+        self.resistance_widget.setVisible(enabled)
+        if enabled:
+            self.y2_axis_combo.setEnabled(False)
+            self.y2_label_input.setEnabled(False)
+            self.y2_abs_checkbox.setEnabled(False)
+            self.y2_legend_input.setEnabled(False)
+
     def toggle_second_y_axis(self, state):
         enabled = state == Qt.Checked
         self.y2_axis_combo.setEnabled(enabled)
@@ -538,6 +581,9 @@ class PlotterUI(QMainWindow):
         self.figure = Figure(figsize=(8, 6))
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
+        # Add QLabel to display R at 100A above the plot area
+        self.r100a_label = QLabel("")
+        layout.addWidget(self.r100a_label)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
 
@@ -557,11 +603,28 @@ class PlotterUI(QMainWindow):
                 self.x_axis_combo.addItems(self.df.columns)
                 self.y1_axis_combo.addItems(self.df.columns)
                 self.y2_axis_combo.addItems(self.df.columns)
+                # Update resistance combos
+                self.voltage_combo.clear()
+                self.current_combo.clear()
+                self.voltage_combo.addItems(self.df.columns)
+                self.current_combo.addItems(self.df.columns)
             except Exception as e:
                 print(f"Failed to load file: {e}")
 
     def plot_selected(self):
         if self.df is not None:
+            # Guard to not try plotting both custom Y2 and resistance
+            if self.enable_resistance_checkbox.isChecked():
+                self.y2_axis_combo.setEnabled(False)
+                self.y2_label_input.setEnabled(False)
+                self.y2_abs_checkbox.setEnabled(False)
+                self.y2_legend_input.setEnabled(False)
+            else:
+                self.y2_axis_combo.setEnabled(self.enable_y2_checkbox.isChecked())
+                self.y2_label_input.setEnabled(self.enable_y2_checkbox.isChecked())
+                self.y2_abs_checkbox.setEnabled(self.enable_y2_checkbox.isChecked())
+                self.y2_legend_input.setEnabled(self.enable_y2_checkbox.isChecked())
+
             x_col = self.x_axis_combo.currentText()
             y1_col = self.y1_axis_combo.currentText()
             y2_col = self.y2_axis_combo.currentText() if self.y2_axis_combo.isEnabled() else None
@@ -570,7 +633,7 @@ class PlotterUI(QMainWindow):
 
             self.figure.clear()
             ax1 = self.figure.add_subplot(111)
-            ax2 = ax1.twinx() if y2_col else None
+            ax2 = None
 
             x_data = self.df[x_col]
 
@@ -596,7 +659,36 @@ class PlotterUI(QMainWindow):
                 ax1.set_ylabel(self.y1_label_input.text() or y1_col, color='tab:blue')
                 ax1.tick_params(axis='y', labelcolor='tab:blue')
 
-            if y2_col:
+            # Resistance plotting
+            if self.enable_resistance_checkbox.isChecked():
+                v_col = self.voltage_combo.currentText()
+                i_col = self.current_combo.currentText()
+                scale_text = self.voltage_scale_combo.currentText()
+                # Updated resistance scale factor mapping
+                scale_factor = {
+                    'mV': 1.0e-3,
+                    'mV×100': 1.0e-3 / 100,
+                    'mV×1000': 1.0e-3 / 1000
+                }.get(scale_text, 1.0e-3)
+
+                voltage = self.df[v_col][mask] * scale_factor
+                current = self.df[i_col][mask]
+                resistance = (voltage / current) * 1e6  # Convert to microohms
+                ax2 = ax1.twinx()
+                ax2.plot(x_data, resistance, label="Resistance", color='tab:red')
+                ax2.set_ylabel("Resistance (µΩ)", color='tab:red')
+                ax2.ticklabel_format(style='plain', axis='y')
+                ax2.tick_params(axis='y', labelcolor='tab:red')
+
+                # Display resistance at 100 A in UI
+                if not current.empty:
+                    closest = current.sub(100).abs().idxmin()
+                    r_at_100a = resistance.loc[closest]
+                    self.r100a_label.setText(f"Resistance at 100A: {r_at_100a:.2f} µΩ")
+                else:
+                    self.r100a_label.setText("")
+            elif y2_col:
+                ax2 = ax1.twinx()
                 y2_data = self.df[y2_col][mask]
                 if self.y2_abs_checkbox.isChecked():
                     y2_data = y2_data.abs()
@@ -609,6 +701,11 @@ class PlotterUI(QMainWindow):
                 )
                 ax2.set_ylabel(self.y2_label_input.text() or y2_col, color='tab:red')
                 ax2.tick_params(axis='y', labelcolor='tab:red')
+                # Clear the R at 100A label if resistance is not plotted
+                self.r100a_label.setText("")
+            else:
+                # Also clear the R at 100A label if resistance is not plotted
+                self.r100a_label.setText("")
 
             # Set X-axis label using input
             ax1.set_xlabel(self.x_label_input.text() or x_col)
@@ -624,6 +721,25 @@ class PlotterUI(QMainWindow):
                 ax1.legend(lines, labels, loc='lower right')
 
             self.canvas.draw()
+
+    def open_external_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)")
+        if file_path:
+            try:
+                self.df = pd.read_csv(file_path)
+                self.x_axis_combo.clear()
+                self.y1_axis_combo.clear()
+                self.y2_axis_combo.clear()
+                self.x_axis_combo.addItems(self.df.columns)
+                self.y1_axis_combo.addItems(self.df.columns)
+                self.y2_axis_combo.addItems(self.df.columns)
+                # Update resistance combos
+                self.voltage_combo.clear()
+                self.current_combo.clear()
+                self.voltage_combo.addItems(self.df.columns)
+                self.current_combo.addItems(self.df.columns)
+            except Exception as e:
+                print(f"Failed to open file: {e}")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -642,7 +758,7 @@ class MainWindow(QMainWindow):
         # Mode selection buttons
         button_widget = QWidget()
         button_layout = QHBoxLayout(button_widget)
-        
+
         cleaner_button = QPushButton("Data Cleaner")
         plotter_button = QPushButton("IV Plotter")
         combiner_button = QPushButton("Combine Files")
@@ -700,7 +816,8 @@ class FileCombinerUI(QMainWindow):
         # Remove drag-and-drop reordering; use selection order instead
         # self.file_list.setDragDropMode(QListWidget.InternalMove)
         # self.file_list.setDefaultDropAction(Qt.MoveAction)
-        layout.addWidget(QLabel("Select Cleaned Files to Combine:"))
+        layout.addWidget(QLabel("Click cleaned files in the desired order to combine.\n"
+                                "The order will be shown by numbers."))
         layout.addWidget(self.file_list)
 
         # Remove drag-and-drop reordering signal
@@ -763,3 +880,21 @@ if __name__ == '__main__':
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
+    def open_external_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)")
+        if file_path:
+            try:
+                self.df = pd.read_csv(file_path)
+                self.x_axis_combo.clear()
+                self.y1_axis_combo.clear()
+                self.y2_axis_combo.clear()
+                self.x_axis_combo.addItems(self.df.columns)
+                self.y1_axis_combo.addItems(self.df.columns)
+                self.y2_axis_combo.addItems(self.df.columns)
+                # Update resistance combos
+                self.voltage_combo.clear()
+                self.current_combo.clear()
+                self.voltage_combo.addItems(self.df.columns)
+                self.current_combo.addItems(self.df.columns)
+            except Exception as e:
+                print(f"Failed to open file: {e}")
