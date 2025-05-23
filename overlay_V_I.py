@@ -94,7 +94,7 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
     ax2.tick_params(top=True, labeltop=False)  # Place ticks on top
     ax1.minorticks_on()  # Enable minor ticks
     ax2.minorticks_on()  # Enable minor ticks
-    ax1.legend()
+    #ax1.legend()
     ax1.tick_params(which='minor', top=True)  # Minor ticks on top
     ax2.tick_params(which='minor', top=True)  # Minor ticks on top
     fig.suptitle(plot_title)
@@ -107,24 +107,23 @@ def overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltag
 # Example usage
 base_path = '/Users/fionnferreira/Library/CloudStorage/GoogleDrive-fionnferreira@gmail.com/My Drive/Barnes Group/Magnets'
 folder_labels = {
-    'Mgn_014b': '(ii)',
-    'Mgn_014a': '(i)',
+    'Ralph_1': 'Ralph',
 }
-hall_sensor_col = 'CH9(Hall sensor 1)'
+hall_sensor_col = 'CH13(Hall)'
 current_col = 'Magna_1_current'
-voltage_col_1 = 'CH15(InAmp1)'
+voltage_col_1 = 'CH6(V1-V2 (Amp x1000))'
 voltage_col_2 = 'CH12(OutAmp3)'
-voltage_divide_1 = 1
-voltage_divide_2 = 100
+voltage_divide_1 = 1000
+voltage_divide_2 = 1
 plot_title = ''
-plot_name = 'Leonardo BV'
+plot_name = 'Ralph_1'
 
 colors = {
-    'set1': {'field': 'tab:blue', 'voltage': 'tab:'},
-    'set2': {'field': 'tab:red', 'voltage': 'tab:pink'},
+    'set1': {'field': 'tab:blue', 'voltage': 'tab:red'},
+    'set2': {'field': 'tab:orange', 'voltage': 'tab:pink'},
     'set3': {'field': 'tab:green', 'voltage': 'tab:olive'},
-    'set4': {'field': 'tab:purple', 'voltage': 'tab:pink'},
-    'set5': {'field': 'tab:orange', 'voltage': 'tab:brown'}
+    'set4': {'field': 'tab:purple', 'voltage': 'tab:brown'},
+    'set5': {'field': 'tab:cyan', 'voltage': 'tab:gray'}
 }
 
 overlay_plots(base_path, folder_labels, hall_sensor_col, current_col, voltage_col_1, voltage_col_2, voltage_divide_1, voltage_divide_2, plot_title)
