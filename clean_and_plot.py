@@ -525,6 +525,11 @@ class PlotterUI(QMainWindow):
         self.y2_abs_checkbox = QCheckBox("Use |Y2|")
         self.y2_abs_checkbox.setEnabled(False)
 
+        # Add derivative checkboxes for Y1 and Y2
+        self.y1_deriv_checkbox = QCheckBox("Use d/dx Y1")
+        self.y2_deriv_checkbox = QCheckBox("Use d/dx Y2")
+        self.y2_deriv_checkbox.setEnabled(False)
+
         layout.addWidget(QLabel("X Axis:"))
         layout.addWidget(self.x_axis_combo)
         layout.addWidget(self.x_label_input)
@@ -532,11 +537,13 @@ class PlotterUI(QMainWindow):
         layout.addWidget(self.y1_axis_combo)
         layout.addWidget(self.y1_label_input)
         layout.addWidget(self.y1_abs_checkbox)
+        layout.addWidget(self.y1_deriv_checkbox)
         layout.addWidget(self.enable_y2_checkbox)
         layout.addWidget(QLabel("Y2 Axis:"))
         layout.addWidget(self.y2_axis_combo)
         layout.addWidget(self.y2_label_input)
         layout.addWidget(self.y2_abs_checkbox)
+        layout.addWidget(self.y2_deriv_checkbox)
         layout.addWidget(QLabel("X range:"))
         layout.addWidget(self.x_min_input)
         layout.addWidget(self.x_max_input)
@@ -564,6 +571,7 @@ class PlotterUI(QMainWindow):
             self.y2_label_input.setEnabled(False)
             self.y2_abs_checkbox.setEnabled(False)
             self.y2_legend_input.setEnabled(False)
+            self.y2_deriv_checkbox.setEnabled(False)
 
     def toggle_second_y_axis(self, state):
         enabled = state == Qt.Checked
@@ -571,6 +579,7 @@ class PlotterUI(QMainWindow):
         self.y2_label_input.setEnabled(enabled)
         self.y2_abs_checkbox.setEnabled(enabled)
         self.y2_legend_input.setEnabled(enabled)
+        self.y2_deriv_checkbox.setEnabled(enabled)
 
     def setup_plot_controls(self, layout):
         plot_button = QPushButton("Plot")
@@ -619,11 +628,13 @@ class PlotterUI(QMainWindow):
                 self.y2_label_input.setEnabled(False)
                 self.y2_abs_checkbox.setEnabled(False)
                 self.y2_legend_input.setEnabled(False)
+                self.y2_deriv_checkbox.setEnabled(False)
             else:
                 self.y2_axis_combo.setEnabled(self.enable_y2_checkbox.isChecked())
                 self.y2_label_input.setEnabled(self.enable_y2_checkbox.isChecked())
                 self.y2_abs_checkbox.setEnabled(self.enable_y2_checkbox.isChecked())
                 self.y2_legend_input.setEnabled(self.enable_y2_checkbox.isChecked())
+                self.y2_deriv_checkbox.setEnabled(self.enable_y2_checkbox.isChecked())
 
             x_col = self.x_axis_combo.currentText()
             y1_col = self.y1_axis_combo.currentText()
@@ -649,6 +660,8 @@ class PlotterUI(QMainWindow):
                 y1_data = self.df[y1_col][mask]
                 if self.y1_abs_checkbox.isChecked():
                     y1_data = y1_data.abs()
+                if self.y1_deriv_checkbox.isChecked():
+                    y1_data = y1_data.diff() / x_data.diff()
                 # Use custom legend entry for Y1
                 ax1.plot(
                     x_data,
@@ -692,6 +705,8 @@ class PlotterUI(QMainWindow):
                 y2_data = self.df[y2_col][mask]
                 if self.y2_abs_checkbox.isChecked():
                     y2_data = y2_data.abs()
+                if self.y2_deriv_checkbox.isChecked():
+                    y2_data = y2_data.diff() / x_data.diff()
                 # Use custom legend entry for Y2
                 ax2.plot(
                     x_data,
