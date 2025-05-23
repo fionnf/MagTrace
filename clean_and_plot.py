@@ -68,6 +68,7 @@ class DataCleanerUI(QMainWindow):
         self.selected_columns = []
         self.exclude_regions = []
         self.column_scales = {}
+        self.column_offsets = {}
 
         # Create UI
         self.setup_ui()
@@ -97,8 +98,25 @@ class DataCleanerUI(QMainWindow):
                 lambda text, col=col_name: self.update_column_scale(col, text))
             scaling_layout.addWidget(scale_combo)
 
+            # Add offset input
+            offset_input = QLineEdit()
+            offset_input.setPlaceholderText("Offset")
+            offset_input.setFixedWidth(60)
+            offset_input.setText(str(self.column_offsets.get(col_name, 0)))
+            offset_input.editingFinished.connect(
+                lambda col=col_name, input=offset_input: self.update_column_offset(col, input))
+            scaling_layout.addWidget(offset_input)
+
             self.scaling_layout.addWidget(scaling_group)
 
+        self.update_plot()
+
+    def update_column_offset(self, column, input_field):
+        try:
+            value = float(input_field.text())
+            self.column_offsets[column] = value
+        except ValueError:
+            self.column_offsets[column] = 0.0
         self.update_plot()
 
     def update_column_scale(self, column, scale):
@@ -210,19 +228,19 @@ class DataCleanerUI(QMainWindow):
     def setup_time_controls(self, parent_layout):
         time_control_widget = QWidget()
         time_control_layout = QHBoxLayout(time_control_widget)
-        
+
         self.min_time_input = QLineEdit()
         self.max_time_input = QLineEdit()
         self.min_time_input.setFixedWidth(70)
         self.max_time_input.setFixedWidth(70)
-        
+
         self.time_slider = QRangeSlider()
-        
+
         time_control_layout.addWidget(QLabel("Min:"))
         time_control_layout.addWidget(self.min_time_input)
         time_control_layout.addWidget(QLabel("Max:"))
         time_control_layout.addWidget(self.max_time_input)
-        
+
         parent_layout.addWidget(QLabel("Time Range:"))
         parent_layout.addWidget(self.time_slider)
         parent_layout.addWidget(time_control_widget)
@@ -306,7 +324,8 @@ class DataCleanerUI(QMainWindow):
                     '÷100': 0.01,
                     '÷1000': 0.001
                 }.get(scale_text, 1.0)
-                y_data = df_filtered[col] * scale_factor
+                offset = self.column_offsets.get(col, 0.0)
+                y_data = df_filtered[col] * scale_factor + offset
                 if 'Timestamp' in df_filtered.columns:
                     ax.plot(df_filtered['Timestamp'], y_data, label=f"{col} ({scale_text})")
                 else:
@@ -367,21 +386,24 @@ class DataCleanerUI(QMainWindow):
                 mask = ~((df_filtered['Timestamp'] >= region[0]) & (df_filtered['Timestamp'] <= region[1]))
                 df_filtered = df_filtered[mask]
 
-            # Apply scaling
+            # Apply scaling and offset
             for column, scale in self.column_scales.items():
-                if scale != '1x' and column in df_filtered.columns:
+                if column in df_filtered.columns:
                     scale_factor = {
                         '÷10': 0.1,
                         '÷100': 0.01,
                         '÷1000': 0.001
                     }.get(scale, 1.0)
-
-                    # Apply scaling to the data
-                    df_filtered[column] = df_filtered[column] * scale_factor
-
+                    if scale != '1x':
+                        # Apply scaling to the data
+                        df_filtered[column] = df_filtered[column] * scale_factor
+                    # Apply offset
+                    offset = self.column_offsets.get(column, 0.0)
+                    df_filtered[column] += offset
                     # Update column name to reflect scaling
-                    new_column = f"{column}_{scale[1:]}"  # Remove the '÷' symbol
-                    df_filtered.rename(columns={column: new_column}, inplace=True)
+                    if scale != '1x':
+                        new_column = f"{column}_{scale[1:]}"  # Remove the '÷' symbol
+                        df_filtered.rename(columns={column: new_column}, inplace=True)
 
             # Save the filtered and scaled data
             df_filtered.to_csv(file_path, index=False)
