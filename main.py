@@ -11,6 +11,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from scipy.signal import savgol_filter
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtGui import QMovie
+
 
 
 class QRangeSlider(QWidget):
@@ -767,6 +770,12 @@ class PlotterUI(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.loading_label = QLabel(self)
+        self.loading_movie = QMovie("spinning_magnet.gif")
+        self.loading_label.setMovie(self.loading_movie)
+        self.loading_label.setVisible(True)
+        self.loading_movie.start()
+
         self.setWindowTitle("Magnet Data Analysis Tool")
         self.setGeometry(100, 100, 1400, 800)
 
