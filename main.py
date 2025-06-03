@@ -1075,7 +1075,6 @@ class LiveViewerUI(QMainWindow):
         self.figure.tight_layout()
         self.canvas.draw()
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
