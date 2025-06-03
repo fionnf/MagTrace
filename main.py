@@ -2,15 +2,16 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                           QHBoxLayout, QPushButton, QFileDialog, QListWidget,
-                           QLabel, QComboBox, QStackedWidget, QRadioButton,
-                           QButtonGroup, QGridLayout, QLineEdit, QSlider,
-                           QCheckBox)
+                             QHBoxLayout, QPushButton, QFileDialog, QListWidget,
+                             QLabel, QComboBox, QStackedWidget, QRadioButton,
+                             QButtonGroup, QGridLayout, QLineEdit, QSlider,
+                             QCheckBox)
 from PyQt5.QtCore import Qt, pyqtSignal
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from scipy.signal import savgol_filter
+
 
 class QRangeSlider(QWidget):
     valueChanged = pyqtSignal(tuple)
@@ -18,13 +19,13 @@ class QRangeSlider(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
-        
+
         self.min_slider = QSlider(Qt.Orientation.Horizontal)
         self.max_slider = QSlider(Qt.Orientation.Horizontal)
-        
+
         layout.addWidget(self.min_slider)
         layout.addWidget(self.max_slider)
-        
+
         self.min_slider.valueChanged.connect(self.update_range)
         self.max_slider.valueChanged.connect(self.update_range)
 
@@ -45,6 +46,7 @@ class QRangeSlider(QWidget):
             self.min_slider.setValue(self.max_slider.value())
         self.valueChanged.emit(self.value())
 
+
 class SharedDataManager:
     def __init__(self):
         self.cleaned_files = []
@@ -55,6 +57,7 @@ class SharedDataManager:
 
     def get_cleaned_files(self):
         return self.cleaned_files
+
 
 class DataCleanerUI(QMainWindow):
     def __init__(self, shared_data_manager):
@@ -419,6 +422,7 @@ class DataCleanerUI(QMainWindow):
     # Add the rest of the DataCleanerUI methods here...
     # (update_plot, etc.)
 
+
 class PlotterUI(QMainWindow):
     def __init__(self, shared_data_manager):
         super().__init__()
@@ -759,6 +763,7 @@ class PlotterUI(QMainWindow):
             except Exception as e:
                 print(f"Failed to open file: {e}")
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -780,10 +785,12 @@ class MainWindow(QMainWindow):
         cleaner_button = QPushButton("Data Cleaner")
         plotter_button = QPushButton("IV Plotter")
         combiner_button = QPushButton("Combine Files")
+        live_button = QPushButton("Live Viewer")
 
         button_layout.addWidget(cleaner_button)
         button_layout.addWidget(plotter_button)
         button_layout.addWidget(combiner_button)
+        button_layout.addWidget(live_button)
         layout.addWidget(button_widget)
 
         # Stacked widget for interfaces
@@ -791,10 +798,12 @@ class MainWindow(QMainWindow):
         self.cleaner = DataCleanerUI(self.shared_data_manager)
         self.plotter = PlotterUI(self.shared_data_manager)
         self.combiner = FileCombinerUI(self.shared_data_manager)
+        self.live_viewer = LiveViewerUI()
 
         self.stacked_widget.addWidget(self.cleaner)
         self.stacked_widget.addWidget(self.plotter)
         self.stacked_widget.addWidget(self.combiner)
+        self.stacked_widget.addWidget(self.live_viewer)
 
         layout.addWidget(self.stacked_widget)
 
@@ -802,6 +811,10 @@ class MainWindow(QMainWindow):
         cleaner_button.clicked.connect(self.switch_to_cleaner)
         plotter_button.clicked.connect(self.switch_to_plotter)
         combiner_button.clicked.connect(self.switch_to_combiner)
+        live_button.clicked.connect(self.switch_to_live_viewer)
+
+    def switch_to_live_viewer(self):
+        self.stacked_widget.setCurrentIndex(3)
 
     def switch_to_cleaner(self):
         self.stacked_widget.setCurrentIndex(0)
@@ -888,31 +901,174 @@ class FileCombinerUI(QMainWindow):
 
     def refresh_numbered_file_list(self):
         # Number only selected items in the order they were selected
-        selected = [self.file_list.item(i) for i in range(self.file_list.count()) if self.file_list.item(i).isSelected()]
+        selected = [self.file_list.item(i) for i in range(self.file_list.count()) if
+                    self.file_list.item(i).isSelected()]
         for i, item in enumerate(selected):
             text = item.text().split(": ", 1)[-1]
             item.setText(f"{i + 1}: {text}")
+
+
+import threading
+import time
+
+
+class LiveViewerUI(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Live Viewer")
+        self.setGeometry(100, 100, 1400, 800)
+
+        self.df = pd.DataFrame()
+        self.running = False
+        self.file_path = ""
+        self.update_interval = 1000  # milliseconds
+
+        self.setup_ui()
+
+    def setup_ui(self):
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        layout = QVBoxLayout(main_widget)
+
+        control_layout = QHBoxLayout()
+
+        self.load_button = QPushButton("Select File")
+        self.load_button.clicked.connect(self.select_file)
+        control_layout.addWidget(self.load_button)
+
+        self.interval_input = QLineEdit("1000")
+        self.interval_input.setFixedWidth(80)
+        control_layout.addWidget(QLabel("Update ms:"))
+        control_layout.addWidget(self.interval_input)
+
+        self.start_button = QPushButton("Start")
+        self.start_button.clicked.connect(self.start_plotting)
+        control_layout.addWidget(self.start_button)
+
+        self.stop_button = QPushButton("Stop")
+        self.stop_button.clicked.connect(self.stop_plotting)
+        self.stop_button.setEnabled(False)
+        control_layout.addWidget(self.stop_button)
+
+        layout.addLayout(control_layout)
+
+        # --- Replace QListWidget with three QComboBox for X, Y1, Y2 ---
+        selector_layout = QHBoxLayout()
+        self.x_combo = QComboBox()
+        self.y1_combo = QComboBox()
+        self.y2_combo = QComboBox()
+        selector_layout.addWidget(QLabel("X:"))
+        selector_layout.addWidget(self.x_combo)
+        selector_layout.addWidget(QLabel("Y1:"))
+        selector_layout.addWidget(self.y1_combo)
+        selector_layout.addWidget(QLabel("Y2:"))
+        selector_layout.addWidget(self.y2_combo)
+        layout.addLayout(selector_layout)
+
+        self.figure = Figure(figsize=(6, 4), dpi=300)
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
+
+    def select_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Data File", "", "All Files (*)")
+        if file_path:
+            self.file_path = file_path
+            try:
+                # Use the same logic as DataCleanerUI.load_file for multi-level headers
+                self.df = pd.read_csv(self.file_path, delimiter=';', skiprows=1, header=[0, 1], low_memory=False)
+                self.df = self.df.dropna(axis=1, how='all')
+                self.df.columns = [self._flatten_col(col) for col in self.df.columns]
+                self.df = self.df.apply(pd.to_numeric, errors='coerce')
+                # Populate combo boxes for X, Y1, Y2
+                self.x_combo.clear()
+                self.y1_combo.clear()
+                self.y2_combo.clear()
+                self.x_combo.addItems(self.df.columns)
+                self.y1_combo.addItems(self.df.columns)
+                self.y2_combo.addItems(self.df.columns)
+                # Optionally set default selection for X to 'Timestamp'
+                if 'Timestamp' in self.df.columns:
+                    self.x_combo.setCurrentText('Timestamp')
+            except Exception as e:
+                print(f"Failed to load file: {e}")
+
+    def _flatten_col(self, col):
+        if isinstance(col, tuple):
+            first = str(col[0]).strip() if pd.notna(col[0]) else ""
+            second = str(col[1]).strip() if pd.notna(col[1]) else ""
+            if second and second != first:
+                return f"{first}({second})"
+            return first
+        return str(col).strip()
+
+    def start_plotting(self):
+        if not self.file_path:
+            return
+        try:
+            self.update_interval = int(self.interval_input.text())
+        except ValueError:
+            self.update_interval = 1000
+
+        # Fallback: Load the file once when live plotting starts
+        try:
+            self.df = pd.read_csv(self.file_path)
+            self.plot_live_data()
+        except Exception as e:
+            print(f"Initial load error: {e}")
+
+        self.running = True
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+
+        self.thread = threading.Thread(target=self.live_plot_loop, daemon=True)
+        self.thread.start()
+
+    def stop_plotting(self):
+        self.running = False
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+
+    def live_plot_loop(self):
+        while self.running:
+            try:
+                self.df = pd.read_csv(self.file_path)
+                self.plot_live_data()
+            except Exception as e:
+                print(f"Live plotting error: {e}")
+            time.sleep(self.update_interval / 1000.0)
+
+    def plot_live_data(self):
+        # Always attempt to plot; only check for valid columns
+        x_col = self.x_combo.currentText()
+        y1_col = self.y1_combo.currentText()
+        y2_col = self.y2_combo.currentText()
+        if not x_col or not y1_col or x_col not in self.df.columns or y1_col not in self.df.columns:
+            return
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        x = self.df[x_col]
+        # Plot Y1
+        if y1_col in self.df.columns:
+            ax.plot(x, self.df[y1_col], label=y1_col, color='tab:blue')
+            ax.set_ylabel(y1_col, color='tab:blue')
+            ax.tick_params(axis='y', labelcolor='tab:blue')
+        # Plot Y2 if selected and different from Y1 and present in columns
+        if y2_col and y2_col != y1_col and y2_col in self.df.columns:
+            ax2 = ax.twinx()
+            ax2.plot(x, self.df[y2_col], label=y2_col, color='tab:red')
+            ax2.set_ylabel(y2_col, color='tab:red')
+            ax2.tick_params(axis='y', labelcolor='tab:red')
+        ax.set_xlabel(x_col)
+        ax.grid(True)
+        ax.legend(loc='upper left')
+        self.figure.tight_layout()
+        self.canvas.draw()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
-    def open_external_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)")
-        if file_path:
-            try:
-                self.df = pd.read_csv(file_path)
-                self.x_axis_combo.clear()
-                self.y1_axis_combo.clear()
-                self.y2_axis_combo.clear()
-                self.x_axis_combo.addItems(self.df.columns)
-                self.y1_axis_combo.addItems(self.df.columns)
-                self.y2_axis_combo.addItems(self.df.columns)
-                # Update resistance combos
-                self.voltage_combo.clear()
-                self.current_combo.clear()
-                self.voltage_combo.addItems(self.df.columns)
-                self.current_combo.addItems(self.df.columns)
-            except Exception as e:
-                print(f"Failed to open file: {e}")
