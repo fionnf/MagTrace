@@ -767,7 +767,7 @@ class PlotterUI(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Data Analysis Tool")
+        self.setWindowTitle("Magnet Data Analysis Tool")
         self.setGeometry(100, 100, 1400, 800)
 
         self.shared_data_manager = SharedDataManager()
@@ -782,10 +782,10 @@ class MainWindow(QMainWindow):
         button_widget = QWidget()
         button_layout = QHBoxLayout(button_widget)
 
-        cleaner_button = QPushButton("Data Cleaner")
-        plotter_button = QPushButton("IV Plotter")
-        combiner_button = QPushButton("Combine Files")
-        live_button = QPushButton("Live Viewer")
+        cleaner_button = QPushButton("🧹 Data Cleaner")
+        plotter_button = QPushButton("📈 Plotter")
+        combiner_button = QPushButton("🔗 Combine Files")
+        live_button = QPushButton("⚡ Live Viewer")
 
         button_layout.addWidget(cleaner_button)
         button_layout.addWidget(plotter_button)
