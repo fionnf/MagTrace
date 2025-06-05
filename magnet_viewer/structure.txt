@@ -1,0 +1,17 @@
+magnet_viewer/
+│
+├── magnet_viewer/                # Main package
+│   ├── __init__.py
+│   ├── main.py                   # Launch script
+│   ├── app.py                    # QApplication + MainWindow
+│   ├── widgets.py                # QRangeSlider, Loading spinner, etc.
+│   ├── modules.py                # DataCleanerUI, PlotterUI, etc.
+│   ├── utils.py                  # flatten_col and shared helpers
+│
+├── assets/
+│   └── spinning_magnet.gif
+│
+├── requirements.txt
+├── setup.py                      # Pip install
+├── LICENSE
+└── README.md
