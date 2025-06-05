@@ -1,1 +1,9 @@
-/Test data/
+# Ignore Python envs
+.venv/
+__pycache__/
+
+# Ignore PyCharm project files
+.idea/
+
+# Ignore test data
+Test data/
