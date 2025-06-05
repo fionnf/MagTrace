@@ -110,6 +110,8 @@ class PlotterUI(QMainWindow):
         self.setWindowTitle("Plotter")
         self.shared_data_manager = shared_data_manager
         self.df = None
+        self.y2_combo = QComboBox()
+        self.y3_combo = QComboBox()
         self.init_ui()
 
     def init_ui(self):
@@ -136,6 +138,10 @@ class PlotterUI(QMainWindow):
         layout.addWidget(self.x_combo)
         layout.addWidget(QLabel("Y axis:"))
         layout.addWidget(self.y_combo)
+        layout.addWidget(QLabel("Y2 axis:"))
+        layout.addWidget(self.y2_combo)
+        layout.addWidget(QLabel("Y3 axis:"))
+        layout.addWidget(self.y3_combo)
         layout.addWidget(self.plot_button)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
@@ -145,19 +151,42 @@ class PlotterUI(QMainWindow):
         self.df = pd.read_csv(path)
         self.x_combo.clear()
         self.y_combo.clear()
+        self.y2_combo.clear()
+        self.y3_combo.clear()
         self.x_combo.addItems(self.df.columns)
         self.y_combo.addItems(self.df.columns)
+        self.y2_combo.addItems(self.df.columns)
+        self.y3_combo.addItems(self.df.columns)
 
     def plot(self):
         if self.df is not None:
             x = self.x_combo.currentText()
             y = self.y_combo.currentText()
+            y2 = self.y2_combo.currentText()
+            y3 = self.y3_combo.currentText()
+
             self.figure.clear()
-            ax = self.figure.add_subplot(111)
-            ax.plot(self.df[x], self.df[y])
-            ax.set_xlabel(x)
-            ax.set_ylabel(y)
-            ax.grid(True)
+            ax1 = self.figure.add_subplot(111)
+            ax2 = ax1.twinx()
+            ax3 = ax1.twinx()
+
+            ax3.spines["right"].set_position(("outward", 60))
+            ax3.spines["right"].set_visible(True)
+
+            ax1.plot(self.df[x], self.df[y], color='tab:blue', label=y)
+            ax2.plot(self.df[x], self.df[y2], color='tab:orange', label=y2)
+            ax3.plot(self.df[x], self.df[y3], color='tab:green', label=y3)
+
+            ax1.set_xlabel(x)
+            ax1.set_ylabel(y, color='tab:blue')
+            ax2.set_ylabel(y2, color='tab:orange')
+            ax3.set_ylabel(y3, color='tab:green')
+
+            ax1.tick_params(axis='y', labelcolor='tab:blue')
+            ax2.tick_params(axis='y', labelcolor='tab:orange')
+            ax3.tick_params(axis='y', labelcolor='tab:green')
+
+            ax1.grid(True)
             self.canvas.draw()
 
 
