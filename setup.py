@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="MagTrace",
     version="0.1.0",
-    description="A GUI for HTS magnet data analysis, cleaning, and plotting. Developed in the Barnes Group, ETH Zurich.",
+    description="HTS magnet data analysis, cleaning, and plotting. Developed in the Barnes Group, ETH Zurich.",
     author="Fionn Ferreira",
     packages=find_packages(),
     include_package_data=True,
