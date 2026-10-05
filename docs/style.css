@@ -1,0 +1,217 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #eef0f3;
+  --border: #d6d9de;
+  --text: #15181d;
+  --text-2: #5b6370;
+  --accent: #2a78d6;
+  --accent-text: #ffffff;
+  --danger: #c43d3d;
+  --radius: 8px;
+  --sidebar-w: 320px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121417;
+    --surface: #1b1e23;
+    --surface-2: #23272e;
+    --border: #353a43;
+    --text: #f1f2f4;
+    --text-2: #a7adb8;
+    --accent: #3987e5;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 8px; }
+.brand-mark { font-size: 20px; }
+.brand-name { font-weight: 700; font-size: 18px; }
+.brand-sub { color: var(--text-2); font-size: 12px; }
+.tabs { display: flex; gap: 4px; flex: 1; }
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-2);
+  padding: 6px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.tab:hover { background: var(--surface-2); }
+.tab.active { background: var(--surface-2); color: var(--text); border-color: var(--border); font-weight: 600; }
+.repo-link { color: var(--text-2); text-decoration: none; font-size: 13px; }
+.repo-link:hover { color: var(--text); text-decoration: underline; }
+
+.privacy-note {
+  margin: 0;
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+.panel.active { display: flex; }
+.sidebar {
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  padding: 12px 16px 24px;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+.sidebar h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+  margin: 18px 0 6px;
+}
+.sidebar h2:first-child { margin-top: 4px; }
+.plot-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+}
+.plot { flex: 1; min-height: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.status { margin: 8px 0 0; color: var(--text-2); font-size: 13px; min-height: 1.4em; }
+.status.error { color: var(--danger); }
+
+.hint { color: var(--text-2); font-size: 12px; margin: 4px 0 0; }
+.fileinfo { font-size: 12px; margin-top: 6px; padding: 6px 8px; background: var(--surface-2); border-radius: var(--radius); word-break: break-all; }
+
+button, input, select {
+  font: inherit;
+  color: var(--text);
+}
+button {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:hover { filter: brightness(0.96); }
+button.small { padding: 4px 10px; font-size: 13px; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); width: 100%; margin-top: 6px; }
+button.icon { padding: 2px 6px; font-size: 12px; line-height: 1; }
+button:disabled { opacity: 0.5; cursor: default; }
+input[type="text"], input[type="number"], input[type="search"], select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  width: 100%;
+  min-width: 0;
+}
+.file-btn { display: block; }
+.file-btn input { display: none; }
+.file-btn span {
+  display: block;
+  text-align: center;
+  padding: 7px 12px;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent);
+  cursor: pointer;
+}
+.file-btn:hover span { background: var(--surface-2); }
+
+.row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.row > span { flex: 0 0 64px; color: var(--text-2); font-size: 13px; }
+.row.check > span { flex: 1; }
+.row.check input { flex: 0 0 auto; }
+.btn-row { display: flex; gap: 6px; margin: 6px 0; align-items: center; }
+
+.checklist {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  background: var(--surface);
+}
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.checklist label:hover { background: var(--surface-2); border-radius: 4px; }
+.checklist label.hidden { display: none; }
+.checklist .empty, .filelist .empty { color: var(--text-2); font-size: 12px; padding: 6px; }
+
+.list { list-style: none; margin: 4px 0 0; padding: 0; }
+.list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.filelist {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.filelist .item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+}
+.filelist .item:last-child { border-bottom: none; }
+.filelist .item:hover { background: var(--surface-2); }
+.filelist .item.selected { background: var(--surface-2); font-weight: 600; }
+.filelist .item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filelist .item .meta { color: var(--text-2); font-size: 11px; }
+
+.placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; }
+
+@media (max-width: 800px) {
+  .panel.active { flex-direction: column; }
+  .sidebar { width: auto; flex: 0 0 auto; border-right: none; border-bottom: 1px solid var(--border); max-height: 50vh; }
+  .plot { min-height: 320px; }
+}
