@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MagTrace</title>
+  <meta name="description" content="Browser version of MagTrace: clean, plot and combine HTS magnet measurement data. Everything runs locally in your browser; no data is uploaded.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M6 4h7v14a3 3 0 0 0 6 0V4h7v14a10 10 0 0 1-20 0z' fill='%23d94c3d'/%3E%3Cpath d='M6 4h7v6H6zM19 4h7v6h-7z' fill='%23bfc4cc'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🧲</span>
+      <span class="brand-name">MagTrace</span>
+      <span class="brand-sub">HTS magnet data analysis</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Tools">
+      <button class="tab active" role="tab" data-tab="cleaner" aria-selected="true">🧹 Cleaner</button>
+      <button class="tab" role="tab" data-tab="plotter" aria-selected="false">📈 Plotter</button>
+      <button class="tab" role="tab" data-tab="combiner" aria-selected="false">🔗 Combiner</button>
+      <button class="tab" role="tab" data-tab="live" aria-selected="false">⚡ Live</button>
+    </nav>
+    <a class="repo-link" href="https://github.com/fionnf/MagTrace" target="_blank" rel="noopener">GitHub</a>
+  </header>
+
+  <p class="privacy-note">All processing happens in your browser. Files never leave your computer.</p>
+
+  <!-- ============ CLEANER ============ -->
+  <section id="tab-cleaner" class="panel active" role="tabpanel">
+    <aside class="sidebar">
+      <h2>1. Load raw LabView export</h2>
+      <label class="file-btn">
+        <input type="file" id="cleaner-file" accept="*/*">
+        <span>Load raw file…</span>
+      </label>
+      <p class="hint">Semicolon separated, first line skipped, two header rows (name + description). Any extension is accepted.</p>
+      <div id="cleaner-fileinfo" class="fileinfo" hidden></div>
+
+      <h2>2. Options</h2>
+      <label class="row">
+        <span>Timestamp</span>
+        <select id="cleaner-tsunit">
+          <option value="1">keep as is</option>
+          <option value="0.001">ms → s</option>
+          <option value="0.0000166666667">ms → min</option>
+        </select>
+      </label>
+      <label class="row check">
+        <input type="checkbox" id="cleaner-normalize">
+        <span>Shift time so the kept range starts at 0</span>
+      </label>
+
+      <h2>3. Columns to plot</h2>
+      <div class="btn-row">
+        <button type="button" class="small" id="cleaner-cols-all">All</button>
+        <button type="button" class="small" id="cleaner-cols-none">None</button>
+        <input type="search" id="cleaner-cols-filter" placeholder="filter…" aria-label="Filter columns">
+      </div>
+      <div id="cleaner-columns" class="checklist" aria-label="Columns"></div>
+
+      <h2>4. Keep time range</h2>
+      <div class="btn-row">
+        <input type="number" id="cleaner-tmin" step="any" placeholder="min" aria-label="Range start">
+        <input type="number" id="cleaner-tmax" step="any" placeholder="max" aria-label="Range end">
+        <button type="button" class="small" id="cleaner-range-reset">Reset</button>
+      </div>
+
+      <h2>5. Exclude regions</h2>
+      <div class="btn-row">
+        <input type="number" id="cleaner-exstart" step="any" placeholder="start" aria-label="Exclude start">
+        <input type="number" id="cleaner-exend" step="any" placeholder="end" aria-label="Exclude end">
+        <button type="button" class="small" id="cleaner-exadd">Add</button>
+      </div>
+      <ul id="cleaner-excludes" class="list"></ul>
+
+      <h2>6. Save</h2>
+      <label class="row">
+        <span>Name</span>
+        <input type="text" id="cleaner-outname" placeholder="cleaned.csv">
+      </label>
+      <button type="button" class="primary" id="cleaner-save">Save cleaned CSV</button>
+      <p class="hint">Saved files are downloaded and also appear in the Plotter and Combiner.</p>
+    </aside>
+    <div class="plot-area">
+      <div id="cleaner-plot" class="plot"></div>
+      <p id="cleaner-status" class="status">Load a raw file to begin.</p>
+    </div>
+  </section>
+
+  <!-- ============ PLOTTER ============ -->
+  <section id="tab-plotter" class="panel" role="tabpanel" hidden>
+    <aside class="sidebar">
+      <h2>Cleaned files</h2>
+      <label class="file-btn">
+        <input type="file" id="plotter-file" accept=".csv,text/csv" multiple>
+        <span>Load cleaned CSV…</span>
+      </label>
+      <div id="plotter-files" class="filelist" aria-label="Cleaned files"></div>
+
+      <h2>Axes</h2>
+      <label class="row"><span>X axis</span><select id="plotter-x"></select></label>
+      <label class="row"><span>Y axis</span><select id="plotter-y"></select></label>
+      <label class="row"><span>Y2 axis</span><select id="plotter-y2"></select></label>
+      <label class="row"><span>Y3 axis</span><select id="plotter-y3"></select></label>
+      <label class="row"><span>Title</span><input type="text" id="plotter-title" placeholder="optional"></label>
+      <label class="row check">
+        <input type="checkbox" id="plotter-markers">
+        <span>Scatter (markers) instead of lines</span>
+      </label>
+      <button type="button" class="primary" id="plotter-plot">Plot</button>
+      <p class="hint">Use the camera icon on the plot to export a PNG. Drag to zoom, double-click to reset.</p>
+    </aside>
+    <div class="plot-area">
+      <div id="plotter-plot-div" class="plot"></div>
+      <p id="plotter-status" class="status">Load or save a cleaned file, then choose the axes.</p>
+    </div>
+  </section>
+
+  <!-- ============ COMBINER ============ -->
+  <section id="tab-combiner" class="panel" role="tabpanel" hidden>
+    <aside class="sidebar">
+      <h2>Select files to combine</h2>
+      <label class="file-btn">
+        <input type="file" id="combiner-file" accept=".csv,text/csv" multiple>
+        <span>Load cleaned CSV…</span>
+      </label>
+      <p class="hint">Files are appended in the order shown. The Timestamp column of each file is shifted so it continues from the previous one, like after a LabView crash.</p>
+      <div id="combiner-files" class="filelist orderable" aria-label="Files to combine"></div>
+      <label class="row">
+        <span>Name</span>
+        <input type="text" id="combiner-outname" placeholder="combined.csv">
+      </label>
+      <button type="button" class="primary" id="combiner-combine">Combine &amp; save</button>
+    </aside>
+    <div class="plot-area">
+      <div id="combiner-plot" class="plot"></div>
+      <p id="combiner-status" class="status">Select two or more cleaned files.</p>
+    </div>
+  </section>
+
+  <!-- ============ LIVE ============ -->
+  <section id="tab-live" class="panel" role="tabpanel" hidden>
+    <div class="placeholder">
+      <p>Live data visualization UI coming soon.</p>
+      <p class="hint">A browser page cannot read the LabView stream directly. Use the desktop version of MagTrace for live data.</p>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
